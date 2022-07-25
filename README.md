@@ -18,10 +18,12 @@ Ejemplo de cómo trabajar con gráficos en Kotlin.
   - [Licencia de uso](#licencia-de-uso)
 
 ## Acerca de
-Este proyecto es la continuación del proyecto realizado con [DataFrames](https://github.com/joseluisgs/Kotlin-DataFrame-Pandas) y con ellos vamos a usar la librería de JetBrains Let's Plot para obtener gráficas de información relevante.
+Este proyecto es la continuación del proyecto realizado con [DataFrames](https://github.com/joseluisgs/Kotlin-DataFrame-Pandas) y con ellos vamos a usar la librería de JetBrains Let's Plot para obtener gráficas de información relevante ya que es una api a alto nivel de GgPlot
 - [Lets Plot GitHub](https://github.com/JetBrains/lets-plot-kotlin)
 - [Guía](https://lets-plot.org/index.html)
 - [Guía en Jupiter](https://nbviewer.org/github/JetBrains/lets-plot-kotlin/blob/master/docs/guide/user_guide.ipynb)
+- [GGplot inicio](http://verso.mat.uam.es/~joser.berrendero/R/introggplot2.html)
+- [Chuleta GGplot](https://diegokoz.github.io/intro_ds/fuentes/ggplot2-cheatsheet-2.1-Spanish.pdf)
 
 
 ## Autor
