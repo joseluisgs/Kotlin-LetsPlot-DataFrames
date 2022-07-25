@@ -23,8 +23,8 @@ fun openInBrowser(content: String, fileName: String) {
     }
 }
 
-fun exportToHtml(plot: Plot) =
-    PlotHtmlExport.buildHtmlFromRawSpecs(plot.toSpec(), scriptUrl(VersionChecker.letsPlotJsVersion))
+fun Plot.exportToHtml() =
+    PlotHtmlExport.buildHtmlFromRawSpecs(this.toSpec(), scriptUrl(VersionChecker.letsPlotJsVersion))
 
 
-fun exportToSvg(plot: Plot) = PlotSvgExport.buildSvgImageFromRawSpecs(plot.toSpec())
+fun Plot.exportToSvg() = PlotSvgExport.buildSvgImageFromRawSpecs(this.toSpec())
