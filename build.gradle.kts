@@ -28,6 +28,9 @@ dependencies {
     // Para hacer logs
     implementation("io.github.microutils:kotlin-logging-jvm:2.1.23")
     implementation("ch.qos.logback:logback-classic:1.3.0-alpha16")
+    // LetsPlot
+    implementation("org.jetbrains.lets-plot:lets-plot-kotlin:3.2.0")
+    implementation("org.jetbrains.lets-plot:lets-plot-image-export:2.3.0")
 }
 
 tasks.test {

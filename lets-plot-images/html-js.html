@@ -1,0 +1,35 @@
+<html lang="en">
+   <head>
+       <script type="text/javascript" data-lets-plot-script="library" src="https://cdn.jsdelivr.net/gh/JetBrains/lets-plot@v2.3.0/js-package/distr/lets-plot.min.js"></script>
+   </head>
+   <body>
+          <div id="9aGRuo"></div>
+   <script type="text/javascript" data-lets-plot-script="plot">
+       var plotSpec={
+"mapping":{
+},
+"data":{
+"x":[0.0,0.5,1.0,2.0],
+"y":[0.0,0.25,1.0,4.0]
+},
+"kind":"plot",
+"scales":[],
+"layers":[{
+"mapping":{
+"x":"x",
+"y":"y"
+},
+"stat":"identity",
+"color":"dark-green",
+"size":4.0,
+"position":"identity",
+"geom":"point",
+"data":{
+}
+}]
+};
+       var plotContainer = document.getElementById("9aGRuo");
+       LetsPlot.buildPlotFromProcessedSpecs(plotSpec, -1, -1, plotContainer);
+   </script>
+   </body>
+</html>

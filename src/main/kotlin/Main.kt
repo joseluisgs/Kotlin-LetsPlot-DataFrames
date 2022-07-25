@@ -1,8 +1,14 @@
+import jetbrains.letsPlot.export.ggsave
+import jetbrains.letsPlot.geom.geomPoint
+import jetbrains.letsPlot.letsPlot
 import models.accidentes.*
 import mu.KotlinLogging
 import org.jetbrains.kotlinx.dataframe.api.*
 import org.jetbrains.kotlinx.dataframe.io.writeCSV
 import org.jetbrains.kotlinx.dataframe.io.writeJson
+import utils.exportToHtml
+import utils.exportToSvg
+import utils.openInBrowser
 import java.io.File
 
 private val logger = KotlinLogging.logger {}
@@ -11,8 +17,30 @@ private val logger = KotlinLogging.logger {}
 
 fun main() {
     println("Hello, Let's Plot!")
+
+    ejemploGrafica()
     ejemploAccidentes()
 
+}
+
+fun ejemploGrafica() {
+    val xs = listOf(0, 0.5, 1, 2)
+    val ys = listOf(0, 0.25, 1, 4)
+    val data = mapOf<String, Any>("x" to xs, "y" to ys)
+
+    val fig = letsPlot(data) + geomPoint(
+        color = "dark-green",
+        size = 4.0
+    ) { x = "x"; y = "y" }
+
+    // La salvamos
+    ggsave(fig, "plot.png")
+
+    // Exportamos en HTML
+    openInBrowser(exportToHtml(fig), "html-js.html")
+
+    // Exportamos en SVG
+    openInBrowser(exportToSvg(fig), "html-svg.html")
 }
 
 private fun ejemploAccidentes() {
