@@ -1,6 +1,8 @@
 import models.accidentes.*
 import mu.KotlinLogging
 import org.jetbrains.kotlinx.dataframe.api.*
+import org.jetbrains.kotlinx.dataframe.io.writeCSV
+import org.jetbrains.kotlinx.dataframe.io.writeJson
 import java.io.File
 
 private val logger = KotlinLogging.logger {}
@@ -45,7 +47,7 @@ private fun ejemploAccidentes() {
     println("Media de accidentes por mes: $mediaAccidentesPorMes")
 
     // Estadisticas por mes hombres y mujeres
-    val porMesHombres = df.convert { fecha }.with { it.month }
+    val porMesSexo = df.convert { fecha }.with { it.month }
         .groupBy { fecha }
         .aggregate {
             count() into "numAccidentes"
@@ -53,7 +55,9 @@ private fun ejemploAccidentes() {
             count { it.sexo == "Mujer" } into "numAccidentesMujeres"
         }
     println("Accidentes por mes hombres y mujeres: ")
-    println(porMesHombres)
+    println(porMesSexo)
+    // Salvamos
+    porMesSexo.writeCSV(File("reports/accidentesPorMesSexo.csv"))
 
     // Estadisticas por distritos
     val porDistrito = df.groupBy { distrito }
@@ -64,6 +68,7 @@ private fun ejemploAccidentes() {
         }
     println("Accidentes por distrito:")
     println(porDistrito)
+    porDistrito.writeCSV(File("reports/accidentesPorDistritoSexo.csv"))
 
     // Estadisticas por meses con alcohol y drogas
     val porMesesAlcoholDrogas = df.convert { fecha }.with { it.month }
@@ -77,6 +82,7 @@ private fun ejemploAccidentes() {
 
     println("Accidentes por meses con alcohol y drogas:")
     println(porMesesAlcoholDrogas)
+    porMesesAlcoholDrogas.writeJson(File("reports/accidentesPorMesesAlcoholDrogas.json"))
 
     // Estadisticas alcohol y drogas po distrito
     val porDistritoAlcoholDrogas = df.groupBy { distrito }
@@ -89,6 +95,7 @@ private fun ejemploAccidentes() {
 
     println("Accidentes por distrito con alcohol y drogas:")
     println(porDistritoAlcoholDrogas)
+    porDistritoAlcoholDrogas.writeCSV(File("reports/accidentesPorDistritoAlcoholDrogas.csv"))
 
 
     // Estadisticas por tipo de vehiculo
@@ -98,6 +105,7 @@ private fun ejemploAccidentes() {
         }
     println("Accidentes por tipo de vehiculo:")
     println(porTipoVehiculo)
+    porTipoVehiculo.writeCSV(File("reports/accidentesPorTipoVehiculo.csv"))
 
     // Estadisticas por distrito
     val porDistritoEstadisticas = porDistritoAlcoholDrogas
@@ -120,5 +128,6 @@ private fun ejemploAccidentes() {
         }
     println("Accidentes por distrito: ")
     println(porDistritoEstadisticas)
+    porDistritoEstadisticas.writeJson(File("reports/accidentesPorDistritoEstadisticas.json"))
 
 }
