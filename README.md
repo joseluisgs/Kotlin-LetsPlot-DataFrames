@@ -12,7 +12,6 @@ Ejemplo de cómo trabajar con gráficos en Kotlin.
 
 - [Kotlin Let's Plot](#kotlin-lets-plot)
   - [Acerca de](#acerca-de)
-  - [Licencia](#licencia)
   - [Autor](#autor)
     - [Contacto](#contacto)
     - [¿Un café?](#un-café)
@@ -24,8 +23,6 @@ Este proyecto es la continuación del proyecto realizado con [DataFrames](https:
 - [Guía](https://lets-plot.org/index.html)
 - [Guía en Jupiter](https://nbviewer.org/github/JetBrains/lets-plot-kotlin/blob/master/docs/guide/user_guide.ipynb)
 
-## Licencia
-Puedes encontrar mi plantilla de licencia en: [LICENSE](#licencia-de-uso).
 
 ## Autor
 
