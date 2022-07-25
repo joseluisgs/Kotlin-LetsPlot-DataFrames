@@ -1,17 +1,16 @@
 import jetbrains.datalore.base.values.Color
 import jetbrains.letsPlot.*
 import jetbrains.letsPlot.export.ggsave
-import jetbrains.letsPlot.geom.geomArea
-import jetbrains.letsPlot.geom.geomBar
-import jetbrains.letsPlot.geom.geomPoint
-import jetbrains.letsPlot.geom.geomTile
+import jetbrains.letsPlot.geom.*
 import jetbrains.letsPlot.intern.Plot
 import jetbrains.letsPlot.label.ggtitle
 import jetbrains.letsPlot.label.labs
 import jetbrains.letsPlot.label.xlab
 import jetbrains.letsPlot.label.ylab
+import jetbrains.letsPlot.sampling.samplingPick
 import jetbrains.letsPlot.scale.scaleColorGradient
 import jetbrains.letsPlot.scale.scaleFillGradient
+import jetbrains.letsPlot.scale.scaleFillHue
 import jetbrains.letsPlot.scale.scaleFillManual
 import kotlinx.datetime.daysUntil
 import kotlinx.datetime.monthsUntil
@@ -249,8 +248,34 @@ fun ejemploNetflix() {
     ggsave(fig, "netflix06.png")
     openInBrowser(fig.exportToHtml(), "netflix06.html")
 
+    // Vamos a ver los directores que más aparecen en Netflix
+    val dfDirectors = df.valueCounts { director }
+    fig = ggplot(dfDirectors.toMap()) +
+            geomHistogram(
+                stat = Stat.identity, sampling = samplingPick(10), color = "#E8F5E9", boundary = 1.0, showLegend = false
+            ) { x = "director"; y = "count"; fill = "director" } +
+            scaleFillHue() +
+            coordFlip() +
+            xlab("Nambre") +
+            ggtitle("Top 10 Directores") +
+            ggsize(850, 500)
+
+    ggsave(fig, "netflix07.png")
+    openInBrowser(fig.exportToHtml(), "netflix07.html")
+
+    // Duracion
+    val dfDur = df
+        .split { duration }.by(" ")
+        .inward("duration_num", "duration_scale") // dividir la duración por tiempo y escalar hacia adentro
+        .convert { "duration"["duration_num"] }.toInt() // conversión por ruta de columna
+        .update { "duration"["duration_scale"] }.with { if (it == "Seasons") "Season" else it }
+    dfDur.head().print()
+
+    // Puntuaciones
+
 
 }
+
 
 fun ejemploGrafica() {
     val xs = listOf(0, 0.5, 1, 2)

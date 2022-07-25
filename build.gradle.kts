@@ -3,7 +3,7 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 plugins {
     kotlin("jvm") version "1.7.10"
     // Para generar modelos de DataFrames
-    kotlin("plugin.dataframe") version "0.8.1"
+    id("org.jetbrains.kotlinx.dataframe") version "0.8.1"
     // Plugin para serializar
     kotlin("plugin.serialization") version "1.7.10"
 
@@ -14,7 +14,9 @@ group = "es.joseluisgs"
 version = "1.0-SNAPSHOT"
 
 repositories {
+    // maven(url = "https://build.geoserver.org/view/geotools/")
     mavenCentral()
+
 }
 
 dependencies {
@@ -31,6 +33,11 @@ dependencies {
     // LetsPlot
     implementation("org.jetbrains.lets-plot:lets-plot-kotlin:3.2.0")
     implementation("org.jetbrains.lets-plot:lets-plot-image-export:2.3.0")
+    // Mapas
+    //implementation("org.geotools:gt-main:24")
+    //implementation("org.geotools:gt-geojson:24")
+    //implementation("org.geotools:gt-shapefile:24")
+    // implementation("org.jetbrains.lets-plot:lets-plot-kotlin-geotools:3.1.0")
 }
 
 tasks.test {
