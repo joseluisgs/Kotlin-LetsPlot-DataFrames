@@ -1,23 +1,38 @@
 import jetbrains.datalore.base.values.Color
-import jetbrains.letsPlot.Stat
+import jetbrains.letsPlot.*
 import jetbrains.letsPlot.export.ggsave
+import jetbrains.letsPlot.geom.geomArea
 import jetbrains.letsPlot.geom.geomBar
 import jetbrains.letsPlot.geom.geomPoint
+import jetbrains.letsPlot.geom.geomTile
 import jetbrains.letsPlot.intern.Plot
 import jetbrains.letsPlot.label.ggtitle
 import jetbrains.letsPlot.label.labs
 import jetbrains.letsPlot.label.xlab
 import jetbrains.letsPlot.label.ylab
-import jetbrains.letsPlot.letsPlot
+import jetbrains.letsPlot.scale.scaleColorGradient
+import jetbrains.letsPlot.scale.scaleFillGradient
+import jetbrains.letsPlot.scale.scaleFillManual
+import kotlinx.datetime.daysUntil
+import kotlinx.datetime.monthsUntil
+import kotlinx.datetime.toKotlinLocalDate
+import kotlinx.datetime.yearsUntil
 import models.accidentes.*
+import models.netflix.*
 import mu.KotlinLogging
+import org.jetbrains.kotlinx.dataframe.DataFrame
 import org.jetbrains.kotlinx.dataframe.api.*
+import org.jetbrains.kotlinx.dataframe.io.readCSV
 import org.jetbrains.kotlinx.dataframe.io.writeCSV
 import org.jetbrains.kotlinx.dataframe.io.writeJson
+import org.jetbrains.kotlinx.dataframe.size
 import utils.exportToHtml
 import utils.exportToSvg
 import utils.openInBrowser
 import java.io.File
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
+import java.util.*
 
 private val logger = KotlinLogging.logger {}
 
@@ -30,7 +45,210 @@ fun main() {
     println("Hello, Let's Plot!")
 
     // ejemploGrafica()
-    ejemploAccidentes()
+    // ejemploAccidentes()
+    ejemploNetflix()
+}
+
+fun ejemploNetflix() {
+    // Para manejar las fechas!
+    Locale.setDefault(Locale.US)
+
+    val rawdf = DataFrame.readCSV("data/netflix_titles.csv")
+    val origin = rawdf.cast<NetflixItem>()
+    // imprimimos el esquema
+    origin.schema().print()
+    println(origin.size()) // rowsCount x columnsCount
+    origin.head().print() // return las primeras 5 filas
+    // Estadisticas generales e info de cada columna
+    origin.describe().print()
+
+    val df =
+        origin.dropNulls { date_added } // eliminamos donde no hay fecha y transformamos a LocalDate de Kotlin que luego para operar vendrá mejor
+            .convert { it["date_added"] }  // si lo cojo así cojo el string que almacena y no su objecto casteado, como arriba
+            .with {
+                LocalDate.parse(it.toString().trim(), DateTimeFormatter.ofPattern("MMMM d, yyyy"))
+            }
+
+    df.head().print()
+
+    // Mejor usar esta sintaxis de ggp
+    var fig = ggplot(origin.toMap()) +
+            geomBar { x = "type"; fill = "type" } +
+            scaleFillManual(listOf("#00BCD4", "#009688")) +
+            ggsize(900, 550) +
+            labs(
+                x = "Tipo",
+                y = "Total",
+                title = "Número de películas y series en Netflix",
+            )
+
+    ggsave(fig, "netflix01.png")
+    openInBrowser(fig.exportToHtml(), "netflix01.html")
+
+    // Vamos a trabajar solo con el año de las fechas
+    var df_dateCount = df.convert { date_added }.with { it!!.year } //solo el año
+        .groupBy { date_added } // agrupamos por año
+        .aggregate {
+            count { type == "TV Show" } into "tvshows" // contamos los tvshows
+            count { type == "Movie" } into "movies" // contamos los movies
+        }
+    df_dateCount.head().print()
+
+    // Podemos simplificarlo más
+    df_dateCount = df.groupBy { date_added.map { it!!.year } } // Mapeamos por el año
+        .aggregate {
+            count { type == "TV Show" } into "tvshows"
+            count { type == "Movie" } into "movies"
+        }
+
+    df_dateCount.head().print()
+
+    // Vamos a pivotar
+    df.groupBy { date_added.map { it!!.year } }
+        .pivot { type }
+
+    df.groupBy { date_added.map { it!!.year } }
+        .pivot { type }.aggregate { count() }
+
+    // Finalmente se queda en:
+    df.groupBy { date_added.map { it!!.year } }
+        .pivot { type }.count()
+
+    // Podemos hacer uso de API pivotCounts()
+    df_dateCount = df.groupBy { date_added.map { it!!.year } }.pivotCounts { type }
+    df_dateCount.head().print()
+
+    // Ahora usamos flatten para que sea una tabla de 2 columnas
+    val df_dateCountFlatten = df_dateCount.flatten()
+    df_dateCountFlatten.head().print()
+
+    // Pintamos
+    fig = ggplot(df_dateCountFlatten.toMap()) +
+            geomArea(color = "#BF360C", fill = "#BF360C", alpha = 0.5) { x = "date_added"; y = "TV Show" } +
+            geomArea(color = "#01579B", fill = "#01579B", alpha = 0.5) { x = "date_added"; y = "Movie" } +
+            theme(
+                panelBackground = elementRect(color = "#ECEFF1", fill = "#ECEFF1"),
+                panelGrid = elementBlank(),
+            ) +
+            labs(
+                x = "Año",
+                y = "Total",
+                title = "Número de películas y series en Netflix",
+            ) + ggsize(800, 500)
+
+    ggsave(fig, "netflix02.png")
+    openInBrowser(fig.exportToHtml(), "netflix02.html")
+
+    // Suma acumulativa de las peliculas sobre los shows
+    val df_cumSumTitles = df_dateCount
+        .sortBy { date_added } // ordenamos por fecha
+        .cumSum { type.all() } // cuente la suma acumulada para las columnas 'Programa de TV' y 'Película' que están anidadas en la columna 'tipo'
+    df_cumSumTitles.head().print()
+
+    fig = ggplot(df_cumSumTitles.flatten().toMap()) +
+            geomArea(color = "#BF360C", fill = "#BF360C", alpha = 0.5) { x = "date_added"; y = "TV Show" } +
+            geomArea(color = "#01579B", fill = "#01579B", alpha = 0.5) { x = "date_added"; y = "Movie" } +
+            theme(
+                panelBackground = elementRect(color = "#ECEFF1", fill = "#ECEFF1"),
+                panelGrid = elementBlank(),
+            ) +
+            labs(
+                x = "Año",
+                y = "Conteo acumulativo",
+                title = "Recuento acumulado de títulos por año",
+            ) + ggsize(800, 500)
+    ggsave(fig, "netflix03.png")
+    openInBrowser(fig.exportToHtml(), "netflix03.html")
+
+    // Vamos a analizar el tiempo de Kotlin que para esto es muy chulo!!!
+    val maxDate = df.date_added.max().toKotlinLocalDate()
+    val dfDays = df.add {
+        "days_on_platform" from {
+            date_added!!.toKotlinLocalDate().daysUntil(maxDate)
+        } // Numero de dias en la plataforma
+        "months_on_platform" from {
+            date_added!!.toKotlinLocalDate().monthsUntil(maxDate)
+        } // numero de meses en la plataforma
+        "years_on_platform" from {
+            date_added!!.toKotlinLocalDate().yearsUntil(maxDate)
+        } // // numero de años en la plataforma
+    }
+
+    fig = ggplot(dfDays.select("type", "years_on_platform").toMap()) + // las dos columnas
+            geomBar(position = Pos.dodge) { x = "years_on_platform"; fill = "type" } +
+            scaleFillManual(listOf("#bc3076", "#30bc76")) +
+            xlab("years") +
+            ggtitle("Años en emisión de películas y programas de televisión en Netflix") +
+            ggsize(900, 500)
+    ggsave(fig, "netflix04.png")
+    openInBrowser(fig.exportToHtml(), "netflix04.html")
+
+    // añadimos la columna diferencia entre año de lanzamienrto  y año de emisión
+    val dfYears = df.add("years_off_platform") {
+        date_added!!.year - release_year
+    }.filter { "years_off_platform"<Int>() > 0 } // quitamos lo que sea menor o igual a cero
+    dfYears.head().print()
+
+    fig = ggplot(dfYears.select("years_off_platform").toMap()) +
+            geomPoint(stat = Stat.count(), size = 7.5) { x = "years_off_platform"; color = "years_off_platform" } +
+            scaleColorGradient(low = "#97a6d0", high = "#00256e") +
+            theme().legendPosition(0.9, 0.83) +
+            xlab("años") +
+            ggtitle("¿Cuánto tiempo se tarda en agregar un título a Netflix?") +
+            ggsize(1000, 500)
+    ggsave(fig, "netflix05.png")
+    openInBrowser(fig.exportToHtml(), "netflix05.html")
+
+    // Las 5 peliculas más viejas
+    dfDays
+        .filter { type == "Movie" } // Por películas
+        .sortByDesc("days_on_platform") // Ordenadas por días
+        .select { type and title and country and date_added and release_year and duration } // Delecionamos as columnas
+        // tamnbien puedes as´i hacer:.select("type", "title", "country", "date_added", "release_year", "duration")
+        .head() //obtenemos los primeros 5
+
+    // Las películas más recientes
+    dfDays
+        .filter { type == "Movie" }
+        .sortBy("days_on_platform")
+        .select { type and title and country and date_added and release_year and duration }
+        .head()
+
+    // Los shos mas viejos
+    dfDays
+        .filter { type == "TV Show" }
+        .sortByDesc("days_on_platform")
+        .select { type and title and country and date_added and release_year and duration }
+        .head()
+
+    // LLos shows mas recientes
+    dfDays
+        .filter { type == "TV Show" }
+        .sortBy("days_on_platform")
+        .select { type and title and country and date_added and release_year and duration }
+        .head()
+
+    // dividir fechas en cuatro columnas, los meses en que se agregan menos peliculas y shows
+    val dfSpliDate = df
+        .split { date_added }.by { listOf(it, it.dayOfWeek, it.month, it.year) }
+        .into("date", "day", "month", "year")
+        .sortBy("month") // sorting by month
+
+    fig = ggplot(
+        dfSpliDate
+            .groupBy("year", "month").count() // contamos cuantos titulos se han añadido cada año y mes
+            .convert("month").toStr() // convertimos el mes en cadena para pintarlo
+            .toMap()
+    ) +
+            geomTile(height = 0.9, width = 0.9) { x = "year"; y = "month"; fill = "count" } +
+            theme(panelBackground = elementBlank(), panelGrid = elementBlank()) +
+            scaleFillGradient(low = "#FFF3E0", high = "#E65100") +
+            ggtitle("Contenido nuevo por mes y año") +
+            ggsize(900, 700)
+
+    ggsave(fig, "netflix06.png")
+    openInBrowser(fig.exportToHtml(), "netflix06.html")
+
 
 }
 
@@ -62,6 +280,7 @@ private fun ejemploAccidentes() {
 
     // cargamos el DataFrame original
     val df by lazy { accidentes.toDataFrame() }
+    df.cast<Accidente>() // Lo casteamos a Accidente
 
     //Mostramos el esquema e imprimimos las 5 primeras filas
     println("Esquema del DataFrame")
