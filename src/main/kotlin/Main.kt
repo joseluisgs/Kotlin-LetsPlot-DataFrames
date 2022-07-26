@@ -12,6 +12,7 @@ import jetbrains.letsPlot.scale.scaleColorGradient
 import jetbrains.letsPlot.scale.scaleFillGradient
 import jetbrains.letsPlot.scale.scaleFillHue
 import jetbrains.letsPlot.scale.scaleFillManual
+import jetbrains.letsPlot.toolkit.geotools.toSpatialDataset
 import kotlinx.datetime.daysUntil
 import kotlinx.datetime.monthsUntil
 import kotlinx.datetime.toKotlinLocalDate
@@ -19,6 +20,8 @@ import kotlinx.datetime.yearsUntil
 import models.accidentes.*
 import models.netflix.*
 import mu.KotlinLogging
+import org.geotools.data.shapefile.ShapefileDataStoreFactory
+import org.geotools.data.simple.SimpleFeatureCollection
 import org.jetbrains.kotlinx.dataframe.DataFrame
 import org.jetbrains.kotlinx.dataframe.api.*
 import org.jetbrains.kotlinx.dataframe.io.readCSV
@@ -29,6 +32,7 @@ import utils.exportToHtml
 import utils.exportToSvg
 import utils.openInBrowser
 import java.io.File
+import java.net.URL
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.*
@@ -312,6 +316,33 @@ fun ejemploNetflix() {
 
     ggsave(fig, "netflix10.png")
     openInBrowser(fig.exportToHtml(), "netflix10.html")
+
+    // Vamos con un mapa
+    val factory = ShapefileDataStoreFactory()
+    val worldFeatures: SimpleFeatureCollection = with("naturalearth_lowres") {
+        val url =
+            "https://raw.githubusercontent.com/JetBrains/lets-plot-kotlin/master/docs/examples/shp/${this}/${this}.shp"
+        factory.createDataStore(URL(url)).featureSource.features
+    }
+
+    // Convertimos a SpatialDataset.
+    // Usamos 10 decimales, que es el limite
+    val world = worldFeatures.toSpatialDataset(10)
+    val voidTheme = theme().axisLineBlank().axisTextBlank().axisTicksBlank().axisTitleBlank()
+    val worldLimits = coordMap(ylim = -55 to 85)
+
+    fig = ggplot() +
+            geomMap(
+                data = dfPeliculasPaises.toMap(),
+                map = world,
+                mapJoin = "iso" to "iso_a3",
+                color = "white"
+            ) { fill = "count" } +
+            scaleFillGradient(low = "#FFF3E0", high = "#E65100", name = "Numer de Titulos") +
+            ggsize(1000, 800) + voidTheme + worldLimits
+
+    ggsave(fig, "netflix11.png")
+    openInBrowser(fig.exportToHtml(), "netflix11.html")
 
 }
 

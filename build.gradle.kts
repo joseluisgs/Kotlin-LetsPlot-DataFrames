@@ -14,9 +14,10 @@ group = "es.joseluisgs"
 version = "1.0-SNAPSHOT"
 
 repositories {
-    // maven(url = "https://build.geoserver.org/view/geotools/")
     mavenCentral()
-
+    maven(url = "https://repo1.maven.org/maven2/")
+    maven(url = "https://repo.osgeo.org/repository/release/")
+    maven(url = "https://repo.osgeo.org/repository/snapshot/")
 }
 
 dependencies {
@@ -33,11 +34,19 @@ dependencies {
     // LetsPlot
     implementation("org.jetbrains.lets-plot:lets-plot-kotlin:3.2.0")
     implementation("org.jetbrains.lets-plot:lets-plot-image-export:2.3.0")
-    // Mapas
-    //implementation("org.geotools:gt-main:24")
-    //implementation("org.geotools:gt-geojson:24")
-    //implementation("org.geotools:gt-shapefile:24")
-    // implementation("org.jetbrains.lets-plot:lets-plot-kotlin-geotools:3.1.0")
+
+    // Mapas GeoTools, para evitar el error de java media, quitar
+    implementation("org.geotools:gt-main:27-SNAPSHOT") {
+        exclude(group = "javax.media", module = "jai_core")
+    }
+    implementation("org.geotools:gt-geojson:27-SNAPSHOT") {
+        exclude(group = "javax.media", module = "jai_core")
+    }
+    implementation("org.geotools:gt-shapefile:27-SNAPSHOT") {
+        exclude(group = "javax.media", module = "jai_core")
+    }
+    // Puente entre Les Plot y GeoTools
+    implementation("org.jetbrains.lets-plot:lets-plot-kotlin-geotools:3.1.0")
 }
 
 tasks.test {
