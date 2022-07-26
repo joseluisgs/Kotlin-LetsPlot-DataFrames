@@ -22,7 +22,7 @@ Este proyecto es la continuación del proyecto realizado con [DataFrames](https:
 - [Lets Plot GitHub](https://github.com/JetBrains/lets-plot-kotlin)
 - [Guía Python](https://lets-plot.org/index.html)
 - [Guía en Jupiter](https://nbviewer.org/github/JetBrains/lets-plot-kotlin/blob/master/docs/guide/user_guide.ipynb)
-- [guía Datalore](https://datalore.jetbrains.com/view/notebook/nsYaTYEEYG1wGIaqa2bWr5)
+- [Guía Datalore](https://datalore.jetbrains.com/view/notebook/nsYaTYEEYG1wGIaqa2bWr5)
 - [GGplot inicio](http://verso.mat.uam.es/~joser.berrendero/R/introggplot2.html)
 - [Chuleta GGplot](https://diegokoz.github.io/intro_ds/fuentes/ggplot2-cheatsheet-2.1-Spanish.pdf)
 
