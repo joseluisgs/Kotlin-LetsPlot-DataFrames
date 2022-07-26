@@ -213,7 +213,7 @@ fun ejemploNetflix() {
         .select { type and title and country and date_added and release_year and duration }
         .head()
 
-    // Los shos mas viejos
+    // Los shows mas viejos
     dfDays
         .filter { type == "TV Show" }
         .sortByDesc("days_on_platform")
@@ -263,7 +263,33 @@ fun ejemploNetflix() {
     ggsave(fig, "netflix07.png")
     openInBrowser(fig.exportToHtml(), "netflix07.html")
 
-    // Duracion
+
+    // Puntuaciones, top 5
+    val dfRating = df.groupBy("rating").count().sortByDesc("count")
+    dfRating.head().print()
+    fig = ggplot(origin.toMap()) +
+            geomBar(position = Pos.dodge) { x = "rating"; fill = "type" } +
+            scaleFillManual(listOf("#00BCD4", "#009688")) +
+            ggsize(900, 550) +
+            labs(
+                x = "Puntuación",
+                y = "Total",
+                title = "Calificación de películas y series en Netflix",
+            )
+
+    ggsave(fig, "netflix08.png")
+    openInBrowser(fig.exportToHtml(), "netflix08.html")
+
+    fig = ggplot(origin.toMap()) +
+            geomHistogram(boundary = 1.0, color = 0xE0F7FA, showLegend = false) { x = "rating"; fill = "rating" } +
+            scaleFillHue() +
+            xlab("Rating") +
+            ggtitle("Calificación de títulos") +
+            ggsize(950, 500)
+
+    ggsave(fig, "netflix09.png")
+    openInBrowser(fig.exportToHtml(), "netflix09.html")
+
     val dfDur = df
         .split { duration }.by(" ")
         .inward("duration_num", "duration_scale") // dividir la duración por tiempo y escalar hacia adentro
@@ -271,8 +297,21 @@ fun ejemploNetflix() {
         .update { "duration"["duration_scale"] }.with { if (it == "Seasons") "Season" else it }
     dfDur.head().print()
 
-    // Puntuaciones
+    // Paises
+    val dfPaises = DataFrame.readCSV("data/country_codes.csv")
+    dfPaises.head().print()
 
+    // contyando el número de paises y haciendo join con la tabla de paises
+    val dfPeliculasPaises = df.valueCounts { country }.join(dfPaises)
+    dfPeliculasPaises.head().print()
+
+    fig = ggplot(dfPeliculasPaises[0..9].sortByDesc("count").toMap()) +
+            geomBar(stat = Stat.identity, fill = "#00796B") { x = "country"; y = "count" } +
+            ggtitle("Top 10 Countries") +
+            ggsize(900, 450)
+
+    ggsave(fig, "netflix10.png")
+    openInBrowser(fig.exportToHtml(), "netflix10.html")
 
 }
 
