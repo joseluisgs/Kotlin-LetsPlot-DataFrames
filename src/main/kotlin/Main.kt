@@ -43,13 +43,17 @@ private val logger = KotlinLogging.logger {}
 // https://lets-plot.org/index.html
 // https://nbviewer.org/github/JetBrains/lets-plot-docs/blob/master/source/examples/cookbook/bar.ipynb
 
+/**
+ * OJO, es mejor hacer las graficas con ggplot directamente que con la sitaxis DSL de accidente
+ * por lo menos a mi me gusta más y es más fácil encontrar info en el readme que dejo
+ */
 
 fun main() {
     println("Hello, Let's Plot!")
 
     // ejemploGrafica()
-    // ejemploAccidentes()
-    ejemploNetflix()
+    ejemploAccidentes()
+    //ejemploNetflix()
 }
 
 fun ejemploNetflix() {
@@ -644,5 +648,54 @@ private fun ejemploAccidentes() {
     println("Accidentes por distrito: ")
     println(porDistritoEstadisticas)
     porDistritoEstadisticas.writeJson(File("reports/accidentesPorDistritoEstadisticas.json"))
+
+    // Otra gráfica, nos quedamos con la fecha en meses
+    val dfDistrito = df.convert { fecha }.with { it.month }
+        .groupBy("distrito", "fecha").count() // contamos
+        .filter { it.distrito != "NULL" }
+    dfDistrito.head().print()
+
+    fig = ggplot(dfDistrito.toMap()) +
+            geomTile(height = 0.9, width = 0.9) { x = "distrito"; y = "fecha"; fill = "count" } +
+            theme(panelBackground = elementBlank(), panelGrid = elementBlank()) +
+            scaleFillGradient(low = "#ffcfcf", high = "#e0000b") +
+            ggtitle("Accidentes por meses y distritos") +
+            ggsize(900, 700)
+
+    ggsave(fig, "porMesesDistritos.png")
+    openInBrowser(fig.exportToHtml(), "porMesesDistritos.html")
+
+    val dfSexo = df.convert { fecha }.with { it.month }
+        .groupBy("sexo", "fecha").count() // contamos
+        .filter { it.sexo == "Hombre" || it.sexo == "Mujer" }
+
+    dfSexo.head().print()
+
+    fig = ggplot(dfSexo.toMap()) +
+            geomTile(height = 0.9, width = 0.9) { x = "sexo"; y = "fecha"; fill = "count" } +
+            theme(panelBackground = elementBlank(), panelGrid = elementBlank()) +
+            scaleFillGradient(low = "#b0cef7", high = "#005de0") +
+            ggtitle("Accidentes por meses y sexo") +
+            ggsize(900, 700)
+
+    ggsave(fig, "porMesesSexo.png")
+    openInBrowser(fig.exportToHtml(), "porMesesSexo.html")
+
+    val dfSexoDistrito = df
+        .groupBy("sexo", "distrito").count() // contamos
+        .filter { (it.sexo == "Hombre" || it.sexo == "Mujer") && it.distrito != "NULL" }
+
+
+    dfSexoDistrito.head().print()
+
+    fig = ggplot(dfSexoDistrito.toMap()) +
+            geomTile(height = 0.9, width = 0.9) { x = "distrito"; y = "sexo"; fill = "count" } +
+            theme(panelBackground = elementBlank(), panelGrid = elementBlank()) +
+            scaleFillGradient(low = "#cba6ff", high = "#41009c") +
+            ggtitle("Accidentes por distrito y sexo") +
+            ggsize(900, 700)
+
+    ggsave(fig, "porDistritoSexo.png")
+    openInBrowser(fig.exportToHtml(), "porDistritoSexo.html")
 
 }
